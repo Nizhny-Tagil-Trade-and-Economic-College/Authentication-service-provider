@@ -26,7 +26,7 @@
                 'GET'
               );
               if (empty($check_payload)) {
-                if ($database -> check_uuid($_GET['uuid'])) {
+                if ($database -> check_uuid_exsist($_GET['uuid'])) {
                   system::create_message(
                     'Пользователь найден!',
                     $database -> get_user(

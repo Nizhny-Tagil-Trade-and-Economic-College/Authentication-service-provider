@@ -394,6 +394,64 @@
       } else return false;
     }
 
+    public function edit_user(
+      string $uuid = '',
+      array $payload = []
+    ) {
+      if ($this -> check_uuid_exsist($uuid) && !empty($payload)) {
+        $continue = true;
+        $pre = [
+          'types' => '',
+          'sql' => '',
+          'payload' => []
+        ];
+        if (!empty($payload['email'])) {
+          if (!$this -> check_email_exsist($payload['email'])) {
+            $pre['types'] .= 's';
+            $pre['sql'] .= "`authorization`.`email` = ?, ";
+            $pre['payload'][] = $this -> real_escape_string($payload['email']);
+          } else $continue = false;
+        }
+        if ($continue) {
+          if (!empty($payload['password'])) {
+            $pre['types'] .= 's';
+            $pre['sql'] .= "`authorization`.`password_hash` = ?, ";
+            $pre['payload'][] = password_hash($this -> real_escape_string($payload['password']), PASSWORD_DEFAULT);
+          }
+          if (!empty($payload['lastname'])) {
+            $pre['types'] .= 's';
+            $pre['sql'] .= "`users_data`.`lastname` = ?, ";
+            $pre['payload'][] = $this -> real_escape_string($payload['lastname']);
+          }
+          if (!empty($payload['firstname'])) {
+            $pre['types'] .= 's';
+            $pre['sql'] .= "`users_data`.`firstname` = ?, ";
+            $pre['payload'][] = $this -> real_escape_string($payload['firstname']);
+          }
+          if (!empty($payload['patronymic'])) {
+            $pre['types'] .= 's';
+            $pre['sql'] .= "`users_data`.`patronymic` = ?, ";
+            $pre['payload'][] = $this -> real_escape_string($payload['patronymic']);
+          }
+          if (!empty($payload['group'])) {
+            $pre['types'] .= 's';
+            $pre['sql'] .= "`users_data`.`group` = ?, ";
+            $pre['payload'][] = $this -> real_escape_string($payload['group']);
+          }
+  
+          if (!empty($pre['types'])) {
+            $pre['sql'] = substr($pre['sql'], 0, -2);
+            $pre['types'] .= 's';
+            $pre['payload'][] = $uuid;
+            $stmt = $this -> prepare("UPDATE `users_data` INNER JOIN `authorization` ON `users_data`.`id` = `authorization`.`id_data` SET {$pre['sql']} WHERE `uuid` = ?;");
+            $stmt -> bind_param($pre['types'], ...$pre['payload']);
+            $stmt -> execute();
+            return true;
+          } else return false;
+        } else return false;
+      } else return false;
+    }
+
     // НАЧАЛО БЛОКА ФУНКЦИЙ СЕРВИСОВ
 
     public function list_of_services($token = '') {

@@ -25,7 +25,7 @@
                 ]
               );
               if (empty($check_payload)) {
-                if ($database -> check_uuid($$_GET['uuid'])) {
+                if ($database -> check_uuid_exsist($$_GET['uuid'])) {
                   if ($database -> purge_user($_POST['uuid'])) {
                     system::create_message('Пользователь удален.');
                   } else system::create_message(
