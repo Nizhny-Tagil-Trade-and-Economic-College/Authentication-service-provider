@@ -55,6 +55,9 @@ CREATE TABLE `services_authorization`(
     `id_user` INT NOT NULL,
     `group` INT NOT NULL
 );
+CREATE TABLE `exsisting_uuid`(`uuid` VARCHAR(255) NOT NULL);
+ALTER TABLE
+    `exsisting_uuid` ADD UNIQUE `exsisting_uuid_uuid_unique`(`uuid`);
 ALTER TABLE
     `refresh_tokens` ADD CONSTRAINT `refresh_tokens_id_user_foreign` FOREIGN KEY(`id_user`) REFERENCES `authorization`(`id`);
 ALTER TABLE

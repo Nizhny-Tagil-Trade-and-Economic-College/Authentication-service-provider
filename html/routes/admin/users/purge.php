@@ -1,6 +1,6 @@
 <?php
   require __DIR__ . '/../../../controllers/autoload.php';
-  if (system::check_method()) {
+  if (system::check_method(['DELETE'])) {
     $database;
     $tokens;
     $system_is_ready = false;
@@ -22,11 +22,12 @@
               $check_payload = system::check_required_payload(
                 [
                   'uuid'
-                ]
+                ],
+                'GET'
               );
               if (empty($check_payload)) {
-                if ($database -> check_uuid_exsist($$_GET['uuid'])) {
-                  if ($database -> purge_user($_POST['uuid'])) {
+                if ($database -> check_uuid_exsist($_GET['uuid'], false)) {
+                  if ($database -> purge_user($_GET['uuid'])) {
                     system::create_message('Пользователь удален.');
                   } else system::create_message(
                     'Невозможно удалить пользователя. Возможно, что такого пользователя не существует.',
@@ -57,4 +58,4 @@
       } else system::create_message('Не предоставлены данные для идентификации!', [], 401);
       $database -> close();
     }
-  } else system::create_message('Неподдерживаемый метод! Поддерживаемые методы: POST.', [], 405);
+  } else system::create_message('Неподдерживаемый метод! Поддерживаемые методы: DELETE.', [], 405);

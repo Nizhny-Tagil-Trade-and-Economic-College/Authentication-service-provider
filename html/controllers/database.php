@@ -36,9 +36,9 @@
 
     // НАЧАЛО БЛОКА ФУНКЦИЙ ПОЛЬЗОВАТЕЛЕЙ
 
-    public function check_uuid_exsist(string $uuid = '') {
+    public function check_uuid_exsist(string $uuid = '', bool $exsisting_user = true) {
       if (!empty($uuid)) {
-        $statement = $this -> prepare("SELECT `id` FROM `authorization` WHERE `uuid` = ?;");
+        $statement = $exsisting_user ? $this -> prepare("SELECT * FROM `exsisting_uuid` WHERE `uuid` = ?;") : $this -> prepare("SELECT `id` FROM `authorization` WHERE `uuid` = ?;");
         $uuid = $this -> real_escape_string($uuid);
         $statement -> bind_param('s', $uuid);
         $statement -> execute();
@@ -366,6 +366,9 @@
           $insert_auth = $this -> prepare("INSERT INTO `authorization` (`uuid`, `email`, `google_ldap_email`, `password_hash`, `id_data`) VALUES (?, ?, NULL, ?, ?);");
           $insert_auth -> bind_param('sssi', $uuid, $email, $password[1], $insert_user_data);
           $insert_auth -> execute();
+          $save_uuid = $this -> prepare("INSERT INTO `exsisting_uuid` (`uuid`) VALUES (?);");
+          $save_uuid -> bind_param('s', $uuid);
+          $save_uuid -> execute();
           return [
             'uuid' => $uuid,
             'password' => $password[0]
@@ -376,7 +379,7 @@
 
     public function purge_user(string $uuid = '') {
       if (!empty($uuid)) {
-        if ($this -> check_uuid_exsist($uuid)) {
+        if ($this -> check_uuid_exsist($uuid, false)) {
           $auth_id = $this -> prepare("SELECT `id`, `id_data` FROM `authorization` WHERE `uuid` = ?;");
           $uuid = $this -> real_escape_string($uuid);
           $auth_id -> bind_param('s', $uuid);

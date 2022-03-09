@@ -1,5 +1,5 @@
 <?php
-  require __DIR__ . '/../../../controllers/autoload.php';
+  require __DIR__ . '/../../../../controllers/autoload.php';
   if (system::check_method(['GET'])) {
     $database;
     $system_is_ready = false;
@@ -17,14 +17,9 @@
           $service = $database -> list_of_services($service_token);
           if (!empty($service)) {
             $service = $service[0];
-            if ($service['can_get_list_of_services']) {
-              system::create_message(
-                'Список готов!',
-                [
-                  'list_of_services' => empty($_GET['identity']) ? $database -> list_of_services() : $database -> list_of_services(intval($_GET['identity'])),
-                ]
-              );
-            } else system::create_message('Представленному сервису запрещено получать список сервисов!', [], 403);
+            if ($service['payload']) {
+              
+            } else system::create_message('Представленному сервису запрещено изменять данные пользователей!', [], 403);
           } else system::create_message('Требуется аутентификация сервиса!', [], 401);
         } else system::create_message('Требуется Bearer-представление!', [], 401);
       } else system::create_message('Не предоставлены данные для идентификации!', [], 401);

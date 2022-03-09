@@ -48,7 +48,8 @@
                         }
                   }
                   if ($check_payload) {
-                    $_POST['groups'] = json_encode($_POST['groups']);
+                    if (!empty($_POST['groups']))
+                      $_POST['groups'] = json_encode($_POST['groups']);
                     if ($database -> edit_service($_POST))
                       system::create_message('Сервис успешно изменен!');
                     else system::create_message('Невозможно изменить сервис! Возможно, что такое имя уже занято.', [], 500);
