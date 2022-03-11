@@ -18,8 +18,31 @@
           if (!empty($service)) {
             $service = $service[0];
             if ($service['payload']) {
-              
-            } else system::create_message('Представленному сервису запрещено изменять данные пользователей!', [], 403);
+              $check_payload = system::check_required_payload([
+                'uuid'
+              ], 'GET');
+              if (empty($check_payload)) {
+                if ($payload = $database -> get_users_payload(
+                  $_GET['uuid'],
+                  $service['id']
+                ))
+                  system::create_message(
+                    'Полезная нагрузка готова!',
+                    $payload
+                  );
+                else system::create_message(
+                  'Не найдена полезная нагрузка!',
+                  [],
+                  404
+                );
+              } else system::create_message(
+                'Не хватает некоторых данных!',
+                [
+                  'not_transferred' => $check_payload
+                ],
+                400
+              );
+            } else system::create_message('Представленному сервису запрещено получать полезную нагрузку!', [], 403);
           } else system::create_message('Требуется аутентификация сервиса!', [], 401);
         } else system::create_message('Требуется Bearer-представление!', [], 401);
       } else system::create_message('Не предоставлены данные для идентификации!', [], 401);

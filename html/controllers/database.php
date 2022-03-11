@@ -455,6 +455,63 @@
       } else return false;
     }
 
+    public function set_users_payload(
+      string $uuid = '',
+      int $service_id = 0,
+      array $payload = []
+    ) {
+      $service = $this -> list_of_services($service_id);
+      if (
+        !empty($service) &&
+        !empty($payload) && 
+        $this -> check_uuid_exsist($uuid)
+      ) {
+        $service = $service[0]['name'];
+        $users_payload = $this -> prepare("SELECT `payload` FROM `users_data` INNER JOIN `authorization` ON `authorization`.`id_data` = `users_data`.`id` WHERE `authorization`.`uuid` = ?;");
+        $uuid = $this -> real_escape_string($uuid);
+        $users_payload -> bind_param('s', $uuid);
+        $users_payload -> execute();
+        $users_payload = $users_payload -> get_result() -> fetch_assoc()['payload'];
+        if (gettype($users_payload) !== 'NULL') {
+          $users_payload = (array) json_decode($users_payload);
+          $users_payload[$service] = $payload;
+          $users_payload = json_encode($users_payload);
+        } else
+          $users_payload = json_encode([
+            $service => $payload
+          ]);
+        $stmt = $this -> prepare("UPDATE `users_data` INNER JOIN `authorization` ON `users_data`.`id` = `authorization`.`id_data` SET `payload` = ? WHERE `uuid` = ?;");
+        $stmt -> bind_param(
+          'ss',
+          $users_payload,
+          $uuid
+        );
+        $stmt -> execute();
+        return true;
+      } else return false;
+    }
+
+    public function get_users_payload(
+      string $uuid = '',
+      int $service_id = 0
+    ) {
+      $service = $this -> list_of_services($service_id);
+      if (!empty($service) && $this -> check_uuid_exsist($uuid)) {
+        $service = $service[0]['name'];
+        $users_payload = $this -> prepare("SELECT `payload` FROM `users_data` INNER JOIN `authorization` ON `authorization`.`id_data` = `users_data`.`id` WHERE `authorization`.`uuid` = ?;");
+        $uuid = $this -> real_escape_string($uuid);
+        $users_payload -> bind_param('s', $uuid);
+        $users_payload -> execute();
+        $users_payload = $users_payload -> get_result() -> fetch_assoc()['payload'];
+        if (gettype($users_payload) !== 'NULL') {
+          $users_payload = (array) json_decode($users_payload);
+          if (!empty($users_payload[$service]))
+            return (array) $users_payload[$service];
+          else return false;
+        } else return false;
+      } else return false;
+    }
+
     // НАЧАЛО БЛОКА ФУНКЦИЙ СЕРВИСОВ
 
     public function list_of_services($token = '') {

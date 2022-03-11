@@ -1,6 +1,6 @@
 <?php
   require __DIR__ . '/../../../../controllers/autoload.php';
-  if (system::check_method(['GET'])) {
+  if (system::check_method()) {
     $database;
     $system_is_ready = false;
     try {
@@ -18,11 +18,41 @@
           if (!empty($service)) {
             $service = $service[0];
             if ($service['payload']) {
-              
-            } else system::create_message('Представленному сервису запрещено изменять данные пользователей!', [], 403);
+              $check_payload = system::check_required_payload([
+                'uuid',
+                'payload'
+              ]);
+              if (empty($check_payload)) {
+                $payload = json_decode($_POST['payload']);
+                if (is_object($payload) || is_array($payload)) {
+                  $payload = (array) $payload;
+                  if ($database -> set_users_payload(
+                    $_POST['uuid'],
+                    $service['id'],
+                    $payload
+                  ))
+                    system::create_message('Полезная нагрузка установлена!');
+                  else system::create_message(
+                    'Проблема при сохранении полезной нагрузки!',
+                    [],
+                    '404'
+                  );
+                } else system::create_message(
+                  'Некорректно составлена полезная нагрузка!',
+                  [$payload],
+                  '400'
+                );
+              } else system::create_message(
+                'Не хватает некоторых данных!',
+                [
+                  'not_transferred' => $check_payload
+                ],
+                400
+              );
+            } else system::create_message('Представленному сервису запрещено получать полезную нагрузку!', [], 403);
           } else system::create_message('Требуется аутентификация сервиса!', [], 401);
         } else system::create_message('Требуется Bearer-представление!', [], 401);
       } else system::create_message('Не предоставлены данные для идентификации!', [], 401);
       $database -> close();
     }
-  } else system::create_message('Неподдерживаемый метод! Поддерживаемые методы: GET.', [], 405);
+  } else system::create_message('Неподдерживаемый метод! Поддерживаемые методы: POST.', [], 405);
