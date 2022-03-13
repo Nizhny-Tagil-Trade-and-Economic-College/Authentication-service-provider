@@ -248,7 +248,7 @@
                       SELECT `id`
                       FROM `authorization`
                       WHERE `uuid` = ?
-                  ),
+                  ) AND
                   `id_service` = ?
                 ;
               ");

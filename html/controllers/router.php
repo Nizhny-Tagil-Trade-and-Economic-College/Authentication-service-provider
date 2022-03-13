@@ -11,20 +11,32 @@
     public function __construct() {
       $this -> finder = !empty($_GET['path_controller']) ? $_GET['path_controller'] : '';
       if (!empty($this -> finder)) {
-        if (file_exists($this -> get_path($this -> finder))) {
+        if (file_exists($this -> get_path())) {
           if (stripos($this -> finder, 'frontend') === false)
             $this -> set_content_type();
-          else $this -> set_content_type('text/html');
-          require $this -> get_path($this -> finder);
+          else {
+            $this -> set_content_type(
+              mime_content_type($this -> get_path())
+            );
+            if (in_array(
+              mime_content_type($this -> get_path()),
+              ['text/x-php']
+            )) $this -> set_content_type('text/html');
+          }
+          require $this -> get_path();
         } else $this -> show_code();
       } else {
-        require $this -> get_path('index');
+        $this -> finder = 'index';
+        require $this -> get_path();
         $this -> set_content_type();
       }
     }
 
-    private function get_path(string $path) {
-      return "{$this -> directory}/{$path}.php";
+    private function get_path() {
+      if (!empty(pathinfo($this -> finder)['extension'])) {
+        $ext = pathinfo($this -> finder);
+        return "{$this -> directory}/{$ext['dirname']}/{$ext['basename']}";
+      } else return "{$this -> directory}/{$this -> finder}.php";
     }
 
     private function show_code(int $code = 404) {
