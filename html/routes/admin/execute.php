@@ -50,7 +50,7 @@
           $private = '';
           openssl_pkey_export($privateRaw, $private);
           file_put_contents(__DIR__ . '/../../assets/php/keys.php', "<?php\n\t\$keys = [\n\t\t'public' => '{$public}',\n\t\t'private' => '{$private}'\n\t];");
-          system::create_message('Успешеная установка! Система установлена в базу данных, ключи установлены.');
+          system::create_message('Успешная установка! Система установлена в базу данных, ключи установлены.');
           $sql -> close();
         } else system::create_message(
           'Некорректное подключение к базе данных!',
