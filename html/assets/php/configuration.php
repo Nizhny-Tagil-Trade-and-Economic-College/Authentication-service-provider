@@ -18,6 +18,8 @@
       // secure - указатель того, что Cookie передается по протоколу HTTPS. По умолчанию true.
       'secure' => false,
       // httponly - указатель того, что Cookie доступна только в протоколе HTTP (запрещена обработка в JS). По умолчанию false.
-      'httponly' => false
+      'httponly' => false,
+      // lifetime - жизнь куки в секундах. По умолчанию - год.
+      'lifetime' => 31536000
     ]
   ];

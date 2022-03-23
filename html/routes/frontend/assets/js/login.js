@@ -38,36 +38,3 @@ function findGetParameter(parameterName) {
       });
   return result;
 }
-
-_loginButton.onclick = async () => {
-  if (_form.checkValidity()) {
-    _form.classList.remove('was-validated');
-
-      let _formData = new FormData(_form);
-      let response = await fetch('/service/user/login', {
-        method: 'POST',
-        body: _formData
-      });
-      if (response.ok) {
-        let answer = await response.json();
-        location.href = `${findGetParameter('redirect')}?jwt=${answer.payload.jwt}&refresh=${answer.payload.refresh}`;
-      } else {
-        switch (response.status) {
-          case 405:
-          case 400:
-            createAlert(
-              '<b>Ошибка!</b> Произошла системная ошибка. Обратитесь к администратору.',
-              'alert-danger'
-            );
-          break;
-          case 401:
-            createAlert(
-              '<b>Внимание!</b> Скорее всего, вы ввели неправильные данные для входа. Попробуйте ещё раз.'
-            );
-          break;
-        }
-    }
-  } else {
-    _form.classList.add('was-validated');
-  }
-}

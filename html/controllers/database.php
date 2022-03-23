@@ -117,10 +117,48 @@
       } else return false;
     }
 
-    public function user_login(string $email = '', string $password = '', string $user_agent = '', string $ip = '', int $id_service = 0) {
-      if (!empty($email) && !empty($password)) {
+    public function user_login(
+      string $email = '',
+      string $password = '',
+      string $user_agent = '',
+      string $ip = '',
+      int $id_service = 0,
+      string $auth_uuid = ''
+    ) {
+      if (!empty($auth_uuid)) {
+        $statement = $this -> prepare("
+          SELECT
+            `authorization`.`id`,
+            `users_data`.`group` 
+          FROM `authorization` 
+          INNER JOIN `users_data`
+          ON `authorization`.`id_data` = `users_data`.`id`
+          WHERE `uuid` = ?;
+        ");
+        $statement -> bind_param('s', $auth_uuid);
+        $statement -> execute();
+        $statement = $statement -> get_result();
+        if ($statement -> num_rows == 1) {
+          $statement = $statement -> fetch_assoc();
+          $id_user = intval($statement['id']);
+          $user_agent = $this -> real_escape_string($user_agent);
+          $ip = $this -> real_escape_string($ip);
+          if ($statement['group'] == 'system' && $id_service == 0) {
+            $statement = $this -> prepare("INSERT INTO `log_of_authorization` (`id_user`, `user_agent`, `ip_address`, `timestamp`, `id_service`) VALUES (?, ?, ?, NOW(), NULL);");
+            $statement -> bind_param('iss', $id_user, $user_agent, $ip);
+            $statement -> execute();
+            return true;
+          } elseif ($id_service != 0) {
+            $statement = $this -> prepare("INSERT INTO `log_of_authorization` (`id_user`, `user_agent`, `ip_address`, `timestamp`, `id_service`) VALUES (?, ?, ?, NOW(), ?);");
+            $statement -> bind_param('issi', $id_user, $user_agent, $ip, $id_service);
+            $statement -> execute();
+            return true;
+          } else return false;
+        } else return false;
+      } elseif (!empty($email) && !empty($password)) {
         $email = $this -> real_escape_string($email);
         $password = $this -> real_escape_string($password);
+        $statement = null;
         $statement = $this -> prepare("
           SELECT
             `authorization`.`id`, `uuid`, `password_hash`,
@@ -151,7 +189,31 @@
               $statement -> execute();
               return $uuid;
             } else return false;
-          }
+          } else return false;
+        } else return false;
+      } else return false;
+    }
+
+    public function user_login_in_form(string $email = '', string $password = '') {
+      if (!empty($email) && !empty($password)) {
+        $email = $this -> real_escape_string($email);
+        $password = $this -> real_escape_string($password);
+        $statement = $this -> prepare("
+          SELECT
+            `authorization`.`id`, `uuid`, `password_hash`,
+            `users_data`.`group` 
+          FROM `authorization` 
+          INNER JOIN `users_data`
+          ON `authorization`.`id_data` = `users_data`.`id`
+          WHERE `email` = ?;
+        ");
+        $statement -> bind_param('s', $email);
+        $statement -> execute();
+        $statement = $statement -> get_result();
+        if ($statement -> num_rows == 1) {
+          $statement = $statement -> fetch_assoc();
+          if (password_verify($password, $statement['password_hash']))
+            return $statement['uuid'];
         } else return false;
       } else return false;
     }
