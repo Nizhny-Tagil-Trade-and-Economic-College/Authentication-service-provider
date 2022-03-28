@@ -43,6 +43,7 @@ CREATE TABLE `services`(
     `production` TINYINT(1) NOT NULL,
     `payload` TINYINT(1) NOT NULL,
     `can_edit_user` TINYINT(1) NOT NULL,
+    `can_get_list_of_users` TINYINT(1) NOT NULL,
     `can_get_list_of_services` TINYINT(1) NOT NULL,
     `groups` JSON NOT NULL
 );

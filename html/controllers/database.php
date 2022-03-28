@@ -56,7 +56,7 @@
       } else return false;
     }
 
-    public function get_user(string $uuid = '', string $service_token = '') {
+    public function get_user(string $uuid = '', string $service_token = '', int $start = 0, int $length = 10) {
       if ($this -> check_uuid_exsist($uuid)) {
         if (!empty($service_token)) {
           $statement = $this -> prepare("
@@ -114,7 +114,30 @@
           $statement = $statement -> get_result();
           return $statement -> num_rows == 1 ? $statement -> fetch_assoc() : false;
         }
-      } else return false;
+      } else {
+        $statement = $this -> prepare("
+            SELECT `uuid`, `lastname`, `firstname`,
+            `patronymic`, `group`, `email`,
+            `google_ldap_email`
+            FROM `authorization` INNER JOIN `users_data`
+            ON `authorization`.`id_data` = `users_data`.`id`
+            LIMIT ?, ?;"
+          );
+          $uuid = $this -> real_escape_string($uuid);
+          $statement -> bind_param('sii', $uuid, $start, $length);
+          $statement -> execute();
+          $statement = $statement -> get_result();
+          if ($statement -> num_rows != 0) {
+            $return = [];
+            while ($piece = $statement -> fetch_assoc())
+              $return[] = $piece;
+            return [
+              'list' => $return,
+              'start' => $start,
+              'length' => $length
+            ];
+          } else return false;
+      }
     }
 
     public function user_login(
@@ -581,15 +604,15 @@
       $s = null;
       if (!empty($token)) {
         if (is_numeric($token)) {
-          $s = $this -> prepare("SELECT `id`, `name`, `production`, `payload`, `groups`, `can_edit_user`, `can_get_list_of_services` FROM `services` WHERE `id` = ?;");
+          $s = $this -> prepare("SELECT `id`, `name`, `production`, `payload`, `groups`, `can_edit_user`, `can_get_list_of_users`, `can_get_list_of_services` FROM `services` WHERE `id` = ?;");
           $token = intval($token);
           $s -> bind_param('i', $token);
         } else {
-          $s = $this -> prepare("SELECT `id`, `name`, `production`, `payload`, `groups`, `can_edit_user`, `can_get_list_of_services` FROM `services` WHERE `token_hash` = ?;");
+          $s = $this -> prepare("SELECT `id`, `name`, `production`, `payload`, `groups`, `can_edit_user`, `can_get_list_of_users`, `can_get_list_of_services` FROM `services` WHERE `token_hash` = ?;");
           $token = hash('SHA512', $token);
           $s -> bind_param('s', $token);
         }
-      } else $s = $this -> prepare("SELECT `id`, `name`, `production`, `payload`, `groups`, `can_edit_user`, `can_get_list_of_services` FROM `services`");
+      } else $s = $this -> prepare("SELECT `id`, `name`, `production`, `payload`, `groups`, `can_edit_user`, `can_get_list_of_users`, `can_get_list_of_services` FROM `services`");
       $s -> execute();
       $s = $s -> get_result();
       while ($row = $s -> fetch_assoc())
@@ -600,6 +623,7 @@
           'payload' => boolval($row['payload']),
           'groups' => json_decode($row['groups']),
           'can_edit_user' => boolval($row['can_edit_user']),
+          'can_get_list_of_users' => boolval($row['can_get_list_of_users']),
           'can_get_list_of_services' => boolval($row['can_get_list_of_services'])
         ];
       return $returned;
@@ -611,6 +635,7 @@
       bool $b_production = false,
       bool $b_payload = false,
       bool $b_can_edit_user = false,
+      bool $b_can_get_list_of_users = false,
       bool $b_can_get_list_of_services = false,
       object $b_groups
     ) {
@@ -620,20 +645,22 @@
         $check_exsist -> bind_param('ss', $token, $name);
         $check_exsist -> execute();
         if ($check_exsist -> get_result() -> num_rows == 0) {
-          $insert = $this -> prepare("INSERT INTO `services` (`token_hash`, `name`, `production`, `payload`, `groups`, `can_edit_user`, `can_get_list_of_services`) VALUES (?, ?, ?, ?, ?, ?, ?);");
+          $insert = $this -> prepare("INSERT INTO `services` (`token_hash`, `name`, `production`, `payload`, `groups`, `can_edit_user`, `can_get_list_of_users` `can_get_list_of_services`) VALUES (?, ?, ?, ?, ?, ?, ?, ?);");
           $name = $this -> real_escape_string($name);
           $b_production = intval($b_production);
           $b_can_edit_user = intval($b_can_edit_user);
+          $b_can_get_list_of_users = intval($b_can_get_list_of_users);
           $b_can_get_list_of_services = intval($b_can_get_list_of_services);
           $b_groups = json_encode($b_groups);
           $insert -> bind_param(
-            'ssiisii',
+            'ssiisiii',
             $token,
             $name,
             $b_production,
             $b_payload,
             $b_groups,
             $b_can_edit_user,
+            $b_can_get_list_of_users,
             $b_can_get_list_of_services
           );
           $insert -> execute();
@@ -654,7 +681,7 @@
       ];
 
       foreach ($payload as $key => $value)
-        if (in_array($key, ['production', 'payload', 'can_edit_user', 'can_get_list_of_services']))
+        if (in_array($key, ['production', 'payload', 'can_edit_user', 'can_get_list_of_services', 'can_get_list_of_users']))
           $triggers[$key] = intval($value);
       if (!empty($this -> list_of_services($payload['token']))) {
         if (!is_null($name)) {

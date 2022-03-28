@@ -24,6 +24,7 @@
                 'production',
                 'payload',
                 'can_edit_user',
+                'can_get_list_of_users',
                 'can_get_list_of_services',
                 'groups'
               ]);
@@ -31,7 +32,7 @@
                 $check_payload = [];
                 foreach ($_POST as $key => $value)
                   if (
-                    in_array($key, ['production', 'payload', 'can_edit_user', 'can_get_list_of_services']) &&
+                    in_array($key, ['production', 'payload', 'can_edit_user', 'can_get_list_of_services', 'can_get_list_of_users']) &&
                     !in_array($value, ['0', '1'])
                   )
                     $check_payload[] = $key;
@@ -52,6 +53,7 @@
                             $_POST['production'] == '1',
                             $_POST['payload'] == '1',
                             $_POST['can_edit_user'] == '1',
+                            $_POST['can_get_list_of_users'] == '1',
                             $_POST['can_get_list_of_services'] == '1',
                             $groups
                           )) {
