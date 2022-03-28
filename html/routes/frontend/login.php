@@ -162,7 +162,7 @@
         <div class="card border-light shadow-lg" style="overflow: hidden;border-radius: 15px;overflow: hidden;max-width: 800px;">
             <div class="card-body d-flex flex-column" style="padding: 0;">
                 <div id="nttek-auth-skew">
-                    <div id="nttek-auth-logo"></div>
+                    <div id="nttek-auth-logo" <?php print(!$_SESSION['is_ok'] ? 'style="margin: 40px auto 0 auto!important;"' : ''); ?>></div>
                 </div>
                 <div class="d-flex justify-content-center align-items-center" style="z-index: 1;">
                     <?php if (!$_SESSION['is_ok']) { ?>
