@@ -17,19 +17,20 @@
           $service = $database -> list_of_services($service_token);
           if (!empty($service)) {
             $service = $service[0];
+            $payload = empty($_GET['uuid']) ?
+            $database -> get_user(
+                '',
+                '',
+                (!empty($_GET['start']) ? intval($_GET['start']) : 0),
+                (!empty($_GET['length']) ? intval($_GET['length']) : 10),
+            )
+            :
+            $database -> get_user($_GET['uuid'], $service_token);
             if ($service['can_get_list_of_users']) {
-              system::create_message(
-                'Список готов!',
-                empty($_GET['uuid']) ?
-                    $database -> get_user(
-                        '',
-                        '',
-                        (!empty($_GET['start']) ? intval($_GET['start']) : 0),
-                        (!empty($_GET['length']) ? intval($_GET['length']) : 10),
-                    )
-                    :
-                    $database -> get_user($_GET['uuid'], $service_token)
-              );
+              if ($payload) 
+                system::create_message('Список готов!', $payload);
+              else
+                system::create_message('Список пуст!');
             } else system::create_message('Представленному сервису запрещено получать список пользователей!', [], 403);
           } else system::create_message('Требуется аутентификация сервиса!', [], 401);
         } else system::create_message('Требуется Bearer-представление!', [], 401);

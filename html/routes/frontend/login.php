@@ -169,7 +169,7 @@
                         <form class="needs-validation" style="margin: 50px;padding: 50px;" id="nttek-form-login" method="POST">
                             <div class="row">
                                 <div class="col" style="padding: 20px;">
-                                    <input class="form-control" type="email" name="email" placeholder="Адрес почты" autofocus="" required>
+                                    <input class="form-control" type="email" name="email" value="<?php print(!empty($_POST['email']) ? $_POST['email'] : ''); ?>" placeholder="Адрес почты" autofocus="" required>
                                     <div class="invalid-feedback">Введите свою почту!</div>
                                 </div>
                             </div>
@@ -178,7 +178,6 @@
                                     <input class="form-control" type="password" placeholder="Пароль" name="password" required>
                                     <div class="invalid-feedback">Введите пароль!</div>
                                 </div>
-                                <?php print("<input type='hidden' name='" . (is_int($identity) ? 'is_admin' : 'service_token') . "' value='{$identity}'>"); ?>
                             </div>
                             <div class="row">
                                 <div class="col d-flex flex-grow-1 flex-shrink-1 flex-fill justify-content-center" style="padding: 20px;"><button id="nttek-login" class="btn btn-primary" type="submit" style="width: 100%;filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));padding: 12px;background: linear-gradient(96.17deg, #6F78CC 4.88%, #3240BC 217.6%);border:none;">Войти</button></div>

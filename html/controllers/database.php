@@ -57,63 +57,65 @@
     }
 
     public function get_user(string $uuid = '', string $service_token = '', int $start = 0, int $length = 10) {
-      if ($this -> check_uuid_exsist($uuid)) {
-        if (!empty($service_token)) {
-          $statement = $this -> prepare("
-            SELECT
-              users_data.lastname, users_data.firstname, users_data.patronymic,
-              users_data.group AS system_group, users_data.payload, authorization.email,
-              authorization.google_ldap_email, services_authorization.group AS service_group,
-              services.production, services.payload AS isPayload, services.name AS services_name
-            FROM 
-              (
+      if (!empty($uuid)) {
+        if ($this -> check_uuid_exsist($uuid)) {
+          if (!empty($service_token)) {
+            $statement = $this -> prepare("
+              SELECT
+                users_data.lastname, users_data.firstname, users_data.patronymic,
+                users_data.group AS system_group, users_data.payload, authorization.email,
+                authorization.google_ldap_email, services_authorization.group AS service_group,
+                services.production, services.payload AS isPayload, services.name AS services_name
+              FROM 
                 (
-                  users_data INNER JOIN authorization ON users_data.id = authorization.id_data
-                ) INNER JOIN services_authorization ON authorization.id = services_authorization.id_user
-			          INNER JOIN services ON services_authorization.id_service = services.id
-              ) WHERE services.token = ? AND authorization.uuid = ?;
-          ");
-          $statement -> bind_param(
-            'ss',
-            $this -> real_escape_string($service_token),
-            $this -> real_escape_string($uuid)
-          );
-          $statement -> execute();
-          $statement = $statement -> get_result();
-          if ($statement -> num_rows == 1) {
-            $statement = $statement -> fetch_assoc();
-            if (boolval($statement['production']) || $statement['system_role'] == 'system') {
-              $user = [
-                'lastname' => $statement['lastname'],
-                'firstname' => $statement['firstname'],
-                'patronymic' => $statement['patronymic'],
-                'system_group' => $statement['system_group'],
-                'email' => $statement['email'],
-                'google_ldap_email' => $statement['google_ldap_email'],
-                'service' => [
-                  'group' => $statement['service_group']
-                ]
-              ];
-              if (boolval($statement['isPayload'])) {
-                $user['payload'] = json_decode($statement['payload']) -> {$statement['services_name']};
-              }
-              return $user;
+                  (
+                    users_data INNER JOIN authorization ON users_data.id = authorization.id_data
+                  ) INNER JOIN services_authorization ON authorization.id = services_authorization.id_user
+                  INNER JOIN services ON services_authorization.id_service = services.id
+                ) WHERE services.token = ? AND authorization.uuid = ?;
+            ");
+            $statement -> bind_param(
+              'ss',
+              $this -> real_escape_string($service_token),
+              $this -> real_escape_string($uuid)
+            );
+            $statement -> execute();
+            $statement = $statement -> get_result();
+            if ($statement -> num_rows == 1) {
+              $statement = $statement -> fetch_assoc();
+              if (boolval($statement['production']) || $statement['system_role'] == 'system') {
+                $user = [
+                  'lastname' => $statement['lastname'],
+                  'firstname' => $statement['firstname'],
+                  'patronymic' => $statement['patronymic'],
+                  'system_group' => $statement['system_group'],
+                  'email' => $statement['email'],
+                  'google_ldap_email' => $statement['google_ldap_email'],
+                  'service' => [
+                    'group' => $statement['service_group']
+                  ]
+                ];
+                if (boolval($statement['isPayload'])) {
+                  $user['payload'] = json_decode($statement['payload']) -> {$statement['services_name']};
+                }
+                return $user;
+              } else return false;
             } else return false;
-          } else return false;
-        } else {
-          $statement = $this -> prepare("
-            SELECT `lastname`, `firstname`, `patronymic`,
-            `group`, `email`, `google_ldap_email`
-            FROM `authorization` INNER JOIN `users_data`
-            ON `authorization`.`id_data` = `users_data`.`id`
-            WHERE `authorization`.`uuid` = ?;"
-          );
-          $uuid = $this -> real_escape_string($uuid);
-          $statement -> bind_param('s', $uuid);
-          $statement -> execute();
-          $statement = $statement -> get_result();
-          return $statement -> num_rows == 1 ? $statement -> fetch_assoc() : false;
-        }
+          } else {
+            $statement = $this -> prepare("
+              SELECT `lastname`, `firstname`, `patronymic`,
+              `group`, `email`, `google_ldap_email`
+              FROM `authorization` INNER JOIN `users_data`
+              ON `authorization`.`id_data` = `users_data`.`id`
+              WHERE `authorization`.`uuid` = ?;"
+            );
+            $uuid = $this -> real_escape_string($uuid);
+            $statement -> bind_param('s', $uuid);
+            $statement -> execute();
+            $statement = $statement -> get_result();
+            return $statement -> num_rows == 1 ? $statement -> fetch_assoc() : false;
+          }
+        } else return false;
       } else {
         $statement = $this -> prepare("
             SELECT `uuid`, `lastname`, `firstname`,
@@ -124,7 +126,7 @@
             LIMIT ?, ?;"
           );
           $uuid = $this -> real_escape_string($uuid);
-          $statement -> bind_param('sii', $uuid, $start, $length);
+          $statement -> bind_param('ii', $start, $length);
           $statement -> execute();
           $statement = $statement -> get_result();
           if ($statement -> num_rows != 0) {
@@ -645,7 +647,7 @@
         $check_exsist -> bind_param('ss', $token, $name);
         $check_exsist -> execute();
         if ($check_exsist -> get_result() -> num_rows == 0) {
-          $insert = $this -> prepare("INSERT INTO `services` (`token_hash`, `name`, `production`, `payload`, `groups`, `can_edit_user`, `can_get_list_of_users` `can_get_list_of_services`) VALUES (?, ?, ?, ?, ?, ?, ?, ?);");
+          $insert = $this -> prepare("INSERT INTO `services` (`token_hash`, `name`, `production`, `payload`, `groups`, `can_edit_user`, `can_get_list_of_users`, `can_get_list_of_services`) VALUES (?, ?, ?, ?, ?, ?, ?, ?);");
           $name = $this -> real_escape_string($name);
           $b_production = intval($b_production);
           $b_can_edit_user = intval($b_can_edit_user);
