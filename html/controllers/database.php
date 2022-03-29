@@ -599,6 +599,42 @@
       } else return false;
     }
 
+    public function set_services_group(
+      string $uuid = '',
+      $identity = '',
+      int $group = 0
+    ) {
+      if ($this -> check_uuid_exsist($uuid)) {
+        $uuid = $this -> real_escape_string($uuid);
+        $service = $this -> list_of_services($identity);
+        if (!empty($service)) {
+          $service = $service[0];
+          $stmt = $this -> prepare("
+            INSERT INTO `services_authorization`
+            (
+              `id_service`, `id_user`, `group`
+            ) VALUES (
+              ?,
+              (
+                SELECT `id`
+                FROM `authorization`
+                WHERE `uuid` = ?
+              ),
+              ?
+            );
+          ");
+          $stmt -> bind_param(
+            'isi',
+            $service['id'],
+            $uuid,
+            $group
+          );
+          $stmt -> execute();
+          return true;
+        } else return false;
+      } else return false;
+    }
+
     // НАЧАЛО БЛОКА ФУНКЦИЙ СЕРВИСОВ
 
     public function list_of_services($token = '') {
