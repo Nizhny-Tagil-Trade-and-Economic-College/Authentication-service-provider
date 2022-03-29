@@ -609,26 +609,40 @@
         $service = $this -> list_of_services($identity);
         if (!empty($service)) {
           $service = $service[0];
-          $stmt = $this -> prepare("
-            INSERT INTO `services_authorization`
-            (
-              `id_service`, `id_user`, `group`
-            ) VALUES (
-              ?,
-              (
-                SELECT `id`
-                FROM `authorization`
-                WHERE `uuid` = ?
-              ),
-              ?
+          $chk = $this -> prepare("SELECT `group` FROM `services_authorization` WHERE `id_services` = ? AND `id_user` = (SELECT `id` FROM `authorization` WHERE `uuid` = ?);");
+          $chk -> bind_param('is', $service['id'], $uuid);
+          $chk -> execute();
+          $stmt = null;
+          if ($chk -> get_result() -> num_rows == 1) {
+            $stmt = $this -> prepare("UPDATE `services_authorization` SET `group` = ? WHERE `id_services` = ? AND `id_user` = (SELECT `id` FROM `authorization` WHERE `uuid` = ?);");
+            $stmt -> bind_param(
+              'iis',
+              $group,
+              $service['id'],
+              $uuid
             );
-          ");
-          $stmt -> bind_param(
-            'isi',
-            $service['id'],
-            $uuid,
-            $group
-          );
+          } else {
+            $stmt = $this -> prepare("
+              INSERT INTO `services_authorization`
+              (
+                `id_service`, `id_user`, `group`
+              ) VALUES (
+                ?,
+                (
+                  SELECT `id`
+                  FROM `authorization`
+                  WHERE `uuid` = ?
+                ),
+                ?
+              );
+            ");
+            $stmt -> bind_param(
+              'isi',
+              $service['id'],
+              $uuid,
+              $group
+            );
+          }
           $stmt -> execute();
           return true;
         } else return false;
