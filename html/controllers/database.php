@@ -609,12 +609,12 @@
         $service = $this -> list_of_services($identity);
         if (!empty($service)) {
           $service = $service[0];
-          $chk = $this -> prepare("SELECT `group` FROM `services_authorization` WHERE `id_services` = ? AND `id_user` = (SELECT `id` FROM `authorization` WHERE `uuid` = ?);");
+          $chk = $this -> prepare("SELECT `group` FROM `services_authorization` WHERE `id_service` = ? AND `id_user` = (SELECT `id` FROM `authorization` WHERE `uuid` = ?);");
           $chk -> bind_param('is', $service['id'], $uuid);
           $chk -> execute();
           $stmt = null;
           if ($chk -> get_result() -> num_rows == 1) {
-            $stmt = $this -> prepare("UPDATE `services_authorization` SET `group` = ? WHERE `id_services` = ? AND `id_user` = (SELECT `id` FROM `authorization` WHERE `uuid` = ?);");
+            $stmt = $this -> prepare("UPDATE `services_authorization` SET `group` = ? WHERE `id_service` = ? AND `id_user` = (SELECT `id` FROM `authorization` WHERE `uuid` = ?);");
             $stmt -> bind_param(
               'iis',
               $group,
