@@ -2,7 +2,7 @@ CREATE TABLE `authorization`(
     `id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `uuid` VARCHAR(255) NOT NULL,
     `email` VARCHAR(255) NOT NULL,
-    `google_ldap_email` VARCHAR(255) NULL,
+    `ldap_email` VARCHAR(255) NULL,
     `password_hash` TEXT NOT NULL,
     `id_data` INT NOT NULL
 );
@@ -11,7 +11,7 @@ ALTER TABLE
 ALTER TABLE
     `authorization` ADD UNIQUE `authorization_email_unique`(`email`);
 ALTER TABLE
-    `authorization` ADD UNIQUE `authorization_google_ldap_email_unique`(`google_ldap_email`);
+    `authorization` ADD UNIQUE `authorization_ldap_email_unique`(`ldap_email`);
 CREATE TABLE `users_data`(
     `id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `lastname` TEXT NOT NULL,
