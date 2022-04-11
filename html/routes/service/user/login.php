@@ -32,16 +32,18 @@
                 system::get_ip_address(),
                 $services['id']
               )) {
-                $jwt = $tokens -> create_jwt_token($database -> get_user($uuid), $uuid, $services['name']);
-                $refresh = $tokens -> create_refresh_token($jwt);
-                $database -> save_refresh_token($uuid, $refresh, $user_agent, $services['id']);
-                system::create_message(
-                  'Успешная авторизация!',
-                  [
-                    'jwt' => $jwt,
-                    'refresh' => $refresh
-                  ]
-                );
+                if ($user_data = $database -> get_user($uuid, $_POST['service_token'])) {
+                  $jwt = $tokens -> create_jwt_token($database -> get_user($uuid, $_POST['service_token']), $uuid, $services['name']);
+                  $refresh = $tokens -> create_refresh_token($jwt);
+                  $database -> save_refresh_token($uuid, $refresh, $user_agent, $services['id']);
+                  system::create_message(
+                    'Успешная авторизация!',
+                    [
+                      'jwt' => $jwt,
+                      'refresh' => $refresh
+                    ]
+                  );
+                } else system::create_message('Некорректные данные для авторизации!', [], 401);
               } else system::create_message('Некорректные данные для авторизации!', [], 401);
             } else system::create_message('Некорректные данные для авторизации!', [], 401);
           } else {

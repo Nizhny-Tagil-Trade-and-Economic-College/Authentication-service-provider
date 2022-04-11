@@ -61,29 +61,31 @@
         if ($this -> check_uuid_exsist($uuid)) {
           if (!empty($service_token)) {
             $statement = $this -> prepare("
-              SELECT
-                users_data.lastname, users_data.firstname, users_data.patronymic,
-                users_data.group AS system_group, users_data.payload, authorization.email,
-                authorization.ldap_email, services_authorization.group AS service_group,
-                services.production, services.payload AS isPayload, services.name AS services_name
-              FROM 
-                (
+                SELECT
+                  users_data.lastname, users_data.firstname, users_data.patronymic,
+                  users_data.group AS system_group, users_data.payload, authorization.email,
+                  authorization.ldap_email, services_authorization.group AS service_group,
+                  services.production, services.payload AS isPayload, services.name AS services_name
+                FROM 
                   (
-                    users_data INNER JOIN authorization ON users_data.id = authorization.id_data
-                  ) INNER JOIN services_authorization ON authorization.id = services_authorization.id_user
-                  INNER JOIN services ON services_authorization.id_service = services.id
-                ) WHERE services.token = ? AND authorization.uuid = ?;
-            ");
+                    (
+                      users_data INNER JOIN authorization ON users_data.id = authorization.id_data
+                    ) INNER JOIN services_authorization ON authorization.id = services_authorization.id_user
+                    INNER JOIN services ON services_authorization.id_service = services.id
+                  ) WHERE services.token_hash = ? AND authorization.uuid = ?;
+              ");
+            $service_token = hash('SHA512', $this -> real_escape_string($service_token));
+            $uuid = $this -> real_escape_string($uuid);
             $statement -> bind_param(
               'ss',
-              $this -> real_escape_string($service_token),
-              $this -> real_escape_string($uuid)
+              $service_token,
+              $uuid
             );
             $statement -> execute();
             $statement = $statement -> get_result();
             if ($statement -> num_rows == 1) {
               $statement = $statement -> fetch_assoc();
-              if (boolval($statement['production']) || $statement['system_role'] == 'system') {
+              if (boolval($statement['production']) || $statement['system_group'] == 'system') {
                 $user = [
                   'lastname' => $statement['lastname'],
                   'firstname' => $statement['firstname'],
