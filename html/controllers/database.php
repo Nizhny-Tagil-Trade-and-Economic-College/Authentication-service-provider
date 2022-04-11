@@ -64,7 +64,7 @@
               SELECT
                 users_data.lastname, users_data.firstname, users_data.patronymic,
                 users_data.group AS system_group, users_data.payload, authorization.email,
-                authorization.google_ldap_email, services_authorization.group AS service_group,
+                authorization.ldap_email, services_authorization.group AS service_group,
                 services.production, services.payload AS isPayload, services.name AS services_name
               FROM 
                 (
@@ -90,7 +90,7 @@
                   'patronymic' => $statement['patronymic'],
                   'system_group' => $statement['system_group'],
                   'email' => $statement['email'],
-                  'google_ldap_email' => $statement['google_ldap_email'],
+                  'ldap_email' => $statement['ldap_email'],
                   'service' => [
                     'group' => $statement['service_group']
                   ]
@@ -104,7 +104,7 @@
           } else {
             $statement = $this -> prepare("
               SELECT `lastname`, `firstname`, `patronymic`,
-              `group`, `email`, `google_ldap_email`
+              `group`, `email`, `ldap_email`
               FROM `authorization` INNER JOIN `users_data`
               ON `authorization`.`id_data` = `users_data`.`id`
               WHERE `authorization`.`uuid` = ?;"
@@ -120,7 +120,7 @@
         $statement = $this -> prepare("
             SELECT `uuid`, `lastname`, `firstname`,
             `patronymic`, `group`, `email`,
-            `google_ldap_email`
+            `ldap_email`
             FROM `authorization` INNER JOIN `users_data`
             ON `authorization`.`id_data` = `users_data`.`id`
             LIMIT ?, ?;"
@@ -450,7 +450,7 @@
           $insert_user_data -> bind_param('ssss', $lastname, $firstname, $patronymic, $group);
           $insert_user_data -> execute();
           $insert_user_data = $insert_user_data -> insert_id;
-          $insert_auth = $this -> prepare("INSERT INTO `authorization` (`uuid`, `email`, `google_ldap_email`, `password_hash`, `id_data`) VALUES (?, ?, NULL, ?, ?);");
+          $insert_auth = $this -> prepare("INSERT INTO `authorization` (`uuid`, `email`, `ldap_email`, `password_hash`, `id_data`) VALUES (?, ?, NULL, ?, ?);");
           $insert_auth -> bind_param('sssi', $uuid, $email, $password[1], $insert_user_data);
           $insert_auth -> execute();
           $save_uuid = $this -> prepare("INSERT INTO `exsisting_uuid` (`uuid`) VALUES (?);");

@@ -39,7 +39,7 @@
           $sql -> multi_query(file_get_contents(__DIR__ . '/../../assets/sql/install.sql'));
           while (mysqli_next_result($sql));
           $sql -> query("INSERT INTO `users_data` (`lastname`, `firstname`, `patronymic`, `group`, `payload`) VALUES ('{$_POST['admin_lastname']}', '{$_POST['admin_firstname']}', '{$_POST['admin_patronymic']}', 'system', NULL);");
-          $sql -> query("INSERT INTO `authorization` (`uuid`, `email`, `google_ldap_email`, `password_hash`, `id_data`) VALUES ('{$uuid}', '{$_POST['admin_email']}', NULL, '{$_POST['admin_password']}', {$sql -> insert_id});");
+          $sql -> query("INSERT INTO `authorization` (`uuid`, `email`, `ldap_email`, `password_hash`, `id_data`) VALUES ('{$uuid}', '{$_POST['admin_email']}', NULL, '{$_POST['admin_password']}', {$sql -> insert_id});");
           $sql -> query("INSERT INTO `exsisting_uuid` (`uuid`) VALUES ('{$uuid}');");
           $privateRaw = openssl_pkey_new([
             'digest_alg' => 'sha512',
